@@ -3,6 +3,7 @@ matplotlib.use('Tkagg')
 import matplotlib.pyplot as plt
 import numpy as np 
 from scipy import sparse, stats
+import os
 
 plt.rcParams['image.cmap'] = 'seismic'
 
@@ -33,12 +34,31 @@ class vanillaRNN():
         self.W_in = np.random.random((self.N_in, self.N))*2 - 1
         self.W = sparse.random(self.N, self.N, density=self.p, data_rvs=normal).A
         self.W_out = np.ones((self.N, self.N_out))
+        self.W_fb = np.random.random((self.N_out, self.N))
 
     def _plot_weights(self, ax: np.ndarray): 
 
         ax[0].imshow(self.W_in, aspect="auto")
         ax[1].imshow(self.W, aspect="auto")
         ax[2].imshow(self.W_out, aspect="auto")
+
+    def save_weights(self, save_path: str):
+        # if os.path.exists(save_path):
+        params_dict = {"N": self.N,
+                       "N_in": self.N_in,
+                       "g": self.g,
+                       "tau": self.tau,
+                       "p": self.p,
+                       }
+        weights_dict = {"W": self.W,
+                        "W_in": self.W_in,
+                        "W_out": self.W_out,
+                        "W_fb": self.W_fb
+                        }
+        
+        with open(save_path, 'wb') as f:
+            np.save(f, arr={**params_dict, **weights_dict}, allow_pickle=True)
+
 
     def _update_simple(self, ts:float):
 
@@ -47,8 +67,6 @@ class vanillaRNN():
 
     def train(self, dt: float, T: float):
         
-        fig, (ax1, ax2) = plt.subplots(2, 3, squeeze=False)
-        self._plot_weights(ax1)
         self.dt = dt
         self.T = T
         time_steps = np.arange(1, T, dt)
@@ -56,14 +74,12 @@ class vanillaRNN():
         self.dx_list = np.zeros((len(time_steps), self.N))
 
         for i, ts in enumerate(time_steps):
-            self._update(i)
+            self._update_simple(i)
             self.x_list[i, :] = self.x
             self.dx_list[i, :] = self.dx
-        self._plot_weights(ax2)
-        plt.show()
-
-    def performance_error(self, target: np.ndarray, out: np.ndarray):
-
-        ep = 
-
-
+    #
+    # def performance_error(self, target: np.ndarray, out: np.ndarray):
+    #
+    #     ep = 
+    #
+    #
